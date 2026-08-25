@@ -2,15 +2,37 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const USER_AGENT='SVOC-Highlighter-Benchmark/0.8 (+https://github.com/ningen/svoc-highlighter)';
+const USER_AGENT='SVOC-Highlighter-Benchmark/0.9 (+https://github.com/ningen/svoc-highlighter)';
 const PRODUCT='svoc-highlighter-benchmark';
 const MIN_DELAY_MS=2000;
-const MAX_PAGES=20;
-const sourceFile=path.resolve('benchmark/sources.json');
+const MAX_PAGES=200;
+const MAX_PAGES_PER_HOST=20;
+function parseArgs(argv){
+  let sourceFile=path.resolve('benchmark/sources.json'),refresh=false;
+  for(let i=0;i<argv.length;i++){
+    if(argv[i]==='--refresh'){refresh=true;continue;}
+    if(argv[i]==='--sources'){
+      const value=argv[++i];if(value===undefined)throw new Error('Missing value for --sources');
+      sourceFile=path.resolve(value);continue;
+    }
+    throw new Error(`Unknown argument: ${argv[i]}`);
+  }
+  return {sourceFile,refresh};
+}
+const {sourceFile,refresh}=parseArgs(process.argv.slice(2));
 const cacheDir=path.resolve('benchmark/cache');
 const sources=JSON.parse(await fs.readFile(sourceFile,'utf8'));
-if(!Array.isArray(sources)) throw new Error('benchmark/sources.json must be an array');
+if(!Array.isArray(sources)) throw new Error(`${sourceFile} must contain an array`);
 if(sources.length>MAX_PAGES) throw new Error(`Refusing to fetch more than ${MAX_PAGES} pages per run`);
+const hostCounts=new Map();
+for(const source of sources){
+  if(!source?.url||source.termsReviewed!==true||!source.license) throw new Error('Every source needs url, license, and termsReviewed:true');
+  const u=new URL(source.url);
+  if(!['http:','https:'].includes(u.protocol)) throw new Error(`Unsupported protocol: ${u.protocol}`);
+  if(u.username||u.password) throw new Error('Credentialed URLs are forbidden');
+  const count=(hostCounts.get(u.hostname)||0)+1;hostCounts.set(u.hostname,count);
+  if(count>MAX_PAGES_PER_HOST) throw new Error(`Refusing to fetch more than ${MAX_PAGES_PER_HOST} pages from ${u.hostname}`);
+}
 await fs.mkdir(cacheDir,{recursive:true});
 let lastRequest=0; const robotsCache=new Map();
 async function politeFetch(url,accept='text/plain,*/*'){
@@ -62,18 +84,20 @@ async function allowed(url){
   return robotsAllows(text,url);
 }
 for(const source of sources){
-  if(!source?.url||source.termsReviewed!==true||!source.license) throw new Error('Every source needs url, license, and termsReviewed:true');
   const u=new URL(source.url);
-  if(!['http:','https:'].includes(u.protocol)) throw new Error(`Unsupported protocol: ${u.protocol}`);
-  if(u.username||u.password) throw new Error('Credentialed URLs are forbidden');
+  const id=crypto.createHash('sha256').update(source.url).digest('hex').slice(0,16);
+  const htmlFile=path.join(cacheDir,`${id}.html`),metadataFile=path.join(cacheDir,`${id}.json`);
+  if(!refresh){
+    try{await Promise.all([fs.access(htmlFile),fs.access(metadataFile)]);console.log(`cached ${u.hostname} already exists; use --refresh to fetch again`);continue;}
+    catch{}
+  }
   if(!(await allowed(source.url))) throw new Error(`robots.txt disallows ${source.url}`);
   const res=await politeFetch(source.url,'text/html,application/xhtml+xml');
   if(!res.ok) throw new Error(`HTTP ${res.status}: ${source.url}`);
   const type=res.headers.get('content-type')||'';
   if(!type.includes('text/html')) throw new Error(`Not HTML: ${source.url} (${type})`);
   const html=await res.text();
-  const id=crypto.createHash('sha256').update(source.url).digest('hex').slice(0,16);
-  await fs.writeFile(path.join(cacheDir,`${id}.html`),html);
-  await fs.writeFile(path.join(cacheDir,`${id}.json`),JSON.stringify({url:source.url,license:source.license,fetchedAt:new Date().toISOString()},null,2));
+  await fs.writeFile(htmlFile,html);
+  await fs.writeFile(metadataFile,JSON.stringify({url:source.url,license:source.license,fetchedAt:new Date().toISOString()},null,2));
   console.log(`cached ${u.hostname} -> ${id}.html`);
 }

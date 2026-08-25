@@ -5,7 +5,7 @@ const gold=JSON.parse(fs.readFileSync(path.join(__dirname,'gold-corpus.json'),'u
 let checks=0,pass=0;const failures=[];
 function checkOne(c,r,text){const got={};for(const x of r.ranges||[])got[x.role]=text.slice(x.start,x.end);if(c.skip){checks++;if(!(r.ranges||[]).length)pass++;else failures.push({text,role:'skip',expected:'no ranges',got:JSON.stringify(got),rule:r.ruleId});return;}for(const role of ['s','v','o','c','m']){if(c[role]!==undefined){checks++;if(got[role]===c[role])pass++;else failures.push({text,role,expected:c[role],got:got[role]||null,confidence:r.confidence,rule:r.ruleId});}}}
 for(const c of corpus){const r=c.m!==undefined?parser.analyze(c.text).sentences[0]:parser.analyzeSentence(c.text,0);checkOne(c,r,c.text);}
-for(const c of gold){const r=c.m!==undefined?parser.analyze(c.text).sentences[0]:parser.analyzeSentence(c.text,0);checkOne(c,r,c.text);}
+for(const c of gold){const r=c.m!==undefined||c.fullAnalysis===true?parser.analyze(c.text).sentences[0]:parser.analyzeSentence(c.text,0);checkOne(c,r,c.text);}
 for(const c of regression){if(c.multi){const rr=parser.analyze(c.text).sentences;checks++;if(rr.length===c.multi.length)pass++;else failures.push({text:c.text,role:'clause-count',expected:c.multi.length,got:rr.length});for(let i=0;i<Math.min(rr.length,c.multi.length);i++)checkOne(c.multi[i],{...rr[i],ranges:rr[i].ranges},rr[i].text);}else checkOne(c,parser.analyzeSentence(c.text,0),c.text);}
 
 const privacy=require('../privacy.js');

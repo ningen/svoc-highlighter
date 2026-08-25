@@ -5,7 +5,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const VERSION = '0.7.0';
+  const VERSION = '0.9.0';
   const DETERMINERS = new Set('a an the this that these those my your his her its our their each every either neither some any no another such all both few many much several enough'.split(' '));
   const PRONOUNS = new Set('i you he she it we they me him her us them who whom whose which what this that these those'.split(' '));
   const POSSESSIVES = new Set('my your his her its our their whose'.split(' '));
@@ -17,7 +17,10 @@
   const BE = new Set('am is are was were be been being'.split(' '));
   const HAVE = new Set('have has had having'.split(' '));
   const DO = new Set('do does did doing done'.split(' '));
-  const AUX = new Set([...MODALS, ...BE, ...HAVE, ...DO]);
+  const CONTRACTIONS = new Set(`don't doesn't didn't can't cannot won't shouldn't couldn't wouldn't isn't aren't wasn't weren't hasn't haven't hadn't
+    don’t doesn’t didn’t can’t won’t shouldn’t couldn’t wouldn’t isn’t aren’t wasn’t weren’t hasn’t haven’t hadn’t`.split(/\s+/));
+  const NEGATIVE_DO_CONTRACTIONS = new Set("don't doesn't didn't don’t doesn’t didn’t".split(' '));
+  const AUX = new Set([...MODALS, ...BE, ...HAVE, ...DO, ...CONTRACTIONS]);
   const NEG_ADVERBS = new Set('not never also just only already still often usually generally typically normally commonly directly automatically simply'.split(' '));
   const LINKING = new Set('am is are was were be been being become becomes became seem seems seemed remain remains remained appear appears appeared feel feels felt look looks looked sound sounds sounded smell smells smelled taste tastes tasted grow grows grew turn turns turned prove proves proved'.split(' '));
 
@@ -40,6 +43,7 @@
     cause causes caused causing keep keeps kept keeping let lets letting mean means meant meaning produce produces produced producing specify specifies specified specifying
     take takes took taken taking give gives gave given giving access accesses accessed accessing request requests requested requesting respond responds responded responding
     fail fails failed failing succeed succeeds succeeded succeeding start starts started starting stop stops stopped stopping wait waits waited waiting trigger triggers triggered triggering
+    exit exits exited exiting click clicks clicked clicking note notes noted noting share shares shared sharing retry retries retried retrying
     return returns returned returning`.split(/\s+/));
 
   const COMMON_ADJECTIVES = new Set(`available valid invalid optional required active inactive true false empty null undefined asynchronous synchronous public private static dynamic
@@ -95,16 +99,18 @@
   function tagTokens(tokens) {
     return tokens.map((t, i) => {
       const w = t.lower;
+      const nextWord = tokens[i + 1]?.lower;
       let tag = 'X';
       if (!t.word) tag = 'PUNCT';
       else if (DETERMINERS.has(w)) tag = 'DET';
       else if (PRONOUNS.has(w)) tag = 'PRON';
       else if (MODALS.has(w)) tag = 'MODAL';
-      else if (BE.has(w) || HAVE.has(w) || DO.has(w)) tag = 'AUX';
+      else if (BE.has(w) || HAVE.has(w) || DO.has(w) || CONTRACTIONS.has(w)) tag = 'AUX';
       else if (PREPOSITIONS.has(w)) tag = 'PREP';
       else if (COORD.has(w)) tag = 'CCONJ';
       else if (SUBORD.has(w) || RELATIVE.has(w)) tag = 'SCONJ';
       else if (THING_WORDS.has(w)) tag = 'PRON';
+      else if (/s$/.test(w) && (AUX.has(nextWord) || MODALS.has(nextWord))) tag = 'NOUN';
       else if (isLexicalVerb(w) || LINKING.has(w)) tag = 'VERB';
       else if (COMMON_ADJECTIVES.has(w)) tag = 'ADJ';
       else if (isLikelyAdverb(w)) tag = 'ADV';
@@ -304,7 +310,10 @@
         end = i - 1; break;
       }
     }
-    return end >= start ? { start, end } : null;
+    if (end < start) return null;
+    const tail = { start, end };
+    if (tokens.slice(start, end + 1).every(token => token.tag === 'ADV' || token.tag === 'PUNCT')) return null;
+    return tail;
   }
 
   function classifyTail(tokens, verbStart, verbEnd, tail) {
@@ -375,6 +384,8 @@
     const first = tokens.findIndex(t => t.word);
     if (first < 0) return -1;
     const w = tokens[first].lower;
+    const next = tokens[first + 1];
+    if (next && (next.tag === 'AUX' || next.tag === 'MODAL' || BE.has(next.lower))) return -1;
     // Third-person forms at the start of an API description are descriptive,
     // not imperatives: "Returns X", "Creates Y", "Checks whether ...".
     if (tokens[first].tag === 'VERB' && /s$/.test(w) && !['is','has','does'].includes(w)) return first;
@@ -390,6 +401,20 @@
     const words = tokens.filter(t => t.word);
     if (words.length < 2) return { ranges: [], confidence: 0, reasons: ['too-short'], ruleId: 'skip.short' };
     if (shortFragment(tokens)) return { ranges: [], confidence: 0.1, reasons: ['short-fragment'], ruleId: 'skip.fragment' };
+
+    // Negative imperatives begin with a do-support auxiliary rather than a
+    // lexical verb: "Do not use ..." and "Don't modify ...".
+    const negativeImperative =
+      (DO.has(tokens[0]?.lower) && ['not', 'never'].includes(tokens[1]?.lower) && tokens[2]?.tag === 'VERB') ||
+      (NEGATIVE_DO_CONTRACTIONS.has(tokens[0]?.lower) && tokens[1]?.tag === 'VERB');
+    if (negativeImperative) {
+      const vp = consumeVerbPhrase(tokens, 0);
+      const tail = findTail(tokens, vp.end + 1);
+      const tailRole = classifyTail(tokens, vp.start, vp.end, tail) || 'o';
+      const ranges = [rangeFromTokens(tokens, vp.start, vp.end, 'v', offset)];
+      if (tail) ranges.push(rangeFromTokens(tokens, tail.start, tail.end, tailRole, offset));
+      return { ranges, confidence: 0.84, reasons: ['negative-imperative', 'verb-phrase', ...(tail ? ['tail-found'] : [])], ruleId: 'main.imperative', tokens };
+    }
 
     // Initial condition + imperative main clause: "If ..., set ...".
     // The visible main clause has an omitted "you" subject, so highlight V/O only.
@@ -573,7 +598,9 @@
       const sentenceText = text.slice(r.start, r.end);
       if ((sentenceText.match(/[A-Za-z]/g) || []).length < 5) continue;
       const result = analyzeSentence(sentenceText, r.start);
-      const modifier = result.tokens ? modifierRanges(result.tokens, result.ranges, r.start) : [];
+      // Modifiers only supplement an identified clause. A skipped fragment has
+      // no core SVOC range and must remain unhighlighted.
+      const modifier = result.tokens && result.ranges.length ? modifierRanges(result.tokens, result.ranges, r.start) : [];
       result.ranges = [...result.ranges, ...modifier];
       ranges.push(...result.ranges);
       const leading = sentenceText.length - sentenceText.trimStart().length;

@@ -23,3 +23,5 @@ Status values used here:
 - [0009: Highlight modifiers conservatively as M](0009-conservative-modifier-highlighting.md)
 
 - [0010: Separate DOM extraction and keep external benchmarks ephemeral](0010-testable-dom-and-ethical-external-benchmarks.md)
+
+- [0011: Evaluate cached documentation with a local browser pipeline](0011-external-benchmark-evaluation-pipeline.md)
