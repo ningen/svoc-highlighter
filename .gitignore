@@ -2,6 +2,8 @@ node_modules/
 benchmark/cache/*
 !benchmark/cache/.gitkeep
 benchmark/output/
+benchmark/.vite/
+dist/
 benchmark/sources.local.json
 *.log
 .DS_Store

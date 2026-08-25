@@ -9,15 +9,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
       - name: Test parser and repository policy
         run: npm test
       - name: Test DOM extraction in Chrome
         run: npm run test:browser
+      - name: Build extension
+        run: npm run build
       - name: Build extension zip
         run: |
-          zip -r svoc-highlighter-${GITHUB_REF_NAME}.zip \
-            manifest.json privacy.js parser.js dom-extractor.js content.js styles.css \
-            popup.html popup.js diagnostics.html diagnostics.js LICENSE
+          cp LICENSE dist/LICENSE
+          cd dist
+          zip -r "../svoc-highlighter-${GITHUB_REF_NAME}.zip" .
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

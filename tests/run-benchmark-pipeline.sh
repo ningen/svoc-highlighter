@@ -12,6 +12,6 @@ fi
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUTPUT="$(mktemp)"
 trap 'rm -f "$OUTPUT"' EXIT
-URL="file://$ROOT/benchmark/harness.html?file=$ROOT/tests/fixtures/dom-basic.html&host=docs.example.test"
+URL="file://$ROOT/benchmark/.vite/benchmark/harness.html?file=$ROOT/tests/fixtures/dom-basic.html&host=docs.example.test"
 "$BROWSER" --headless --disable-gpu --no-sandbox --allow-file-access-from-files --dump-dom --virtual-time-budget=10000 "$URL" >"$OUTPUT" 2>/dev/null
 node "$ROOT/tests/benchmark-harness.test.mjs" "$OUTPUT"

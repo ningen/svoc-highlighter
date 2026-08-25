@@ -1,12 +1,29 @@
 {
   "name": "svoc-highlighter",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
-    "test": "node tests/run-tests.js && node tests/repository-policy.test.js && node tests/benchmark-policy.test.js && node tests/benchmark-lib.test.mjs",
-    "test:browser": "bash tests/run-dom-tests.sh && bash tests/run-benchmark-pipeline.sh",
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "node tests/run-tests.ts && node tests/repository-policy.test.cjs && node tests/benchmark-policy.test.cjs && node tests/benchmark-lib.test.mjs && vitest run tests/dom-extractor.test.ts",
+    "test:browser": "npm run build:harness && bash tests/run-benchmark-pipeline.sh",
+    "build:harness": "vite build --config vite.benchmark.config.ts",
     "benchmark:fetch": "node tools/fetch-benchmark.mjs",
-    "benchmark:run": "node tools/run-benchmark.mjs",
+    "benchmark:run": "npm run build:harness && node tools/run-benchmark.mjs",
     "benchmark": "npm run benchmark:fetch && npm run benchmark:run"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.7.1",
+    "@types/chrome": "^0.2.7",
+    "@types/node": "^26.3.0",
+    "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   }
 }

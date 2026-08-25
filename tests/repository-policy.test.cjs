@@ -10,6 +10,7 @@ const workflow=fs.readFileSync(path.join(root,'.github/workflows/release.yml'),'
 check('release does not run external benchmark fetcher',!workflow.includes('benchmark:fetch'));
 check('release package excludes benchmark directory',!workflow.match(/zip[^\n]*benchmark\//));
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
-check('dom extractor loaded before content runtime',manifest.content_scripts[0].js.indexOf('dom-extractor.js') < manifest.content_scripts[0].js.indexOf('content.js'));
+check('TypeScript content entry is bundled by Vite',manifest.content_scripts[0].js.length===1&&manifest.content_scripts[0].js[0]==='src/content.ts');
+check('content styles are sourced from TypeScript app tree',manifest.content_scripts[0].css.length===1&&manifest.content_scripts[0].css[0]==='src/styles.css');
 console.log(`Repository policy: ${pass}/${checks} checks passed`);
 if(failures.length){for(const f of failures)console.error(`FAIL ${f}`);process.exitCode=1;}

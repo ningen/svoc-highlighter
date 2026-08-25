@@ -1,5 +1,25 @@
 # SVOC Highlighter
 
+## Development
+
+The extension is built with Vite 8, TypeScript, and CRXJS. Runtime sources live under `src/`; Vite emits a loadable MV3 extension into `dist/`.
+
+```bash
+npm install
+npm run dev       # Vite + CRXJS development server
+npm run typecheck
+npm test
+npm run build
+```
+
+Load `dist/` as an unpacked extension in Chrome. `npm run test:browser` additionally runs the local benchmark harness and requires Chromium/Chrome.
+
+## v0.10.0
+
+- Migrated the extension runtime to TypeScript and Vite 8 with CRXJS.
+- Added strict type checking, typed Chrome storage boundaries, and Vitest DOM tests.
+- Production builds now emit a loadable extension under `dist/`, and release archives are built from that directory.
+
 ## v0.9.0
 
 - Added a local headless-Chromium benchmark that runs gitignored cached pages through the production DOM extractor and parser.
@@ -10,7 +30,7 @@
 
 ## v0.8.0
 
-- Separated DOM extraction into `dom-extractor.js` so DOM behavior can be tested independently from the parser and renderer.
+- Separated DOM extraction into `src/dom-extractor.ts` so DOM behavior can be tested independently from the parser and renderer.
 - Added synthetic DOM fixtures and headless Chromium tests.
 - Added an opt-in external benchmark fetcher with an empty-by-default allowlist, robots.txt checks, rate limiting, request caps, and a gitignored cache.
 - CI remains network-free; fetched third-party HTML is never committed.
@@ -82,11 +102,11 @@ When the list is saved, existing samples and analyzed-host counters from newly e
 
 ## Install
 
-1. Download and extract `svoc-highlighter-v0.9.0.zip`.
+1. Download and extract `svoc-highlighter-v0.10.0.zip`.
 2. Open `chrome://extensions`.
 3. Enable **Developer mode**.
 4. Choose **Load unpacked**.
-5. Select the extracted directory.
+5. Select the extracted directory (or the local `dist/` directory after running `npm run build`).
 
 ## Tests
 

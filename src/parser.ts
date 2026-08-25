@@ -1,11 +1,81 @@
-(function (root, factory) {
-  const api = factory();
-  if (typeof module === 'object' && module.exports) module.exports = api;
-  else root.SVOCParser = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
-  'use strict';
+export type Role = 's' | 'v' | 'o' | 'c' | 'm';
 
-  const VERSION = '0.9.0';
+export type TokenTag =
+  | 'X'
+  | 'PUNCT'
+  | 'DET'
+  | 'PRON'
+  | 'MODAL'
+  | 'AUX'
+  | 'PREP'
+  | 'CCONJ'
+  | 'SCONJ'
+  | 'VERB'
+  | 'ADJ'
+  | 'ADV'
+  | 'NUM'
+  | 'NOUN';
+
+export interface RawToken {
+  readonly text: string;
+  readonly lower: string;
+  readonly start: number;
+  readonly end: number;
+  readonly word: boolean;
+  readonly punct: boolean;
+}
+
+export interface Token extends RawToken {
+  readonly tag: TokenTag;
+}
+
+export interface ParserRange {
+  readonly start: number;
+  readonly end: number;
+  readonly role: Role;
+}
+
+export interface SentenceResult {
+  ranges: ParserRange[];
+  readonly confidence: number;
+  readonly reasons: string[];
+  readonly ruleId: string;
+  readonly tokens?: Token[];
+}
+
+export interface AnalyzedSentence extends Omit<SentenceResult, 'tokens'> {
+  readonly text: string;
+  readonly start: number;
+  readonly end: number;
+}
+
+export interface AnalysisResult {
+  readonly version: string;
+  readonly ranges: ParserRange[];
+  readonly sentences: AnalyzedSentence[];
+  readonly durationMs: number;
+}
+
+interface IndexRange {
+  start: number;
+  end: number;
+}
+
+interface VerbPhrase extends IndexRange {
+  readonly seenCore: boolean;
+}
+
+interface RelativeInterval extends IndexRange {
+  readonly verb: number;
+}
+
+interface MainVerb {
+  readonly index: number;
+  readonly score: number;
+  readonly relatives: RelativeInterval[];
+}
+
+  export const VERSION = '0.10.0';
   const DETERMINERS = new Set('a an the this that these those my your his her its our their each every either neither some any no another such all both few many much several enough'.split(' '));
   const PRONOUNS = new Set('i you he she it we they me him her us them who whom whose which what this that these those'.split(' '));
   const POSSESSIVES = new Set('my your his her its our their whose'.split(' '));
@@ -54,20 +124,20 @@
   const IRREGULAR_PARTICIPLES = new Set('built called chosen done found given got gotten kept known made meant read run sent set shown taken thrown written'.split(' '));
   const SENTENCE_BREAK = /[.!?]/;
 
-  function sentenceRanges(text) {
+  function sentenceRanges(text: string): IndexRange[] {
     if (typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function') {
       const seg = new Intl.Segmenter('en', { granularity: 'sentence' });
       return Array.from(seg.segment(text), s => ({ start: s.index, end: s.index + s.segment.length }));
     }
-    const out = [];
+    const out: IndexRange[] = [];
     const re = /[^.!?]+[.!?]*/g;
     let m;
     while ((m = re.exec(text))) out.push({ start: m.index, end: m.index + m[0].length });
     return out;
   }
 
-  function tokenize(text) {
-    const out = [];
+  function tokenize(text: string): RawToken[] {
+    const out: RawToken[] = [];
     const re = /[A-Za-z]+(?:['’][A-Za-z]+)?|\d+(?:\.\d+)?|[^\s]/g;
     let m;
     while ((m = re.exec(text))) {
@@ -84,23 +154,23 @@
     return out;
   }
 
-  function isLikelyAdverb(w) {
+  function isLikelyAdverb(w: string): boolean {
     return NEG_ADVERBS.has(w) || (w.length > 4 && w.endsWith('ly'));
   }
 
-  function isLikelyParticiple(w) {
+  function isLikelyParticiple(w: string): boolean {
     return IRREGULAR_PARTICIPLES.has(w) || /(?:ed|ing)$/.test(w);
   }
 
-  function isLexicalVerb(w) {
+  function isLexicalVerb(w: string): boolean {
     return VERBS.has(w);
   }
 
-  function tagTokens(tokens) {
+  function tagTokens(tokens: RawToken[]): Token[] {
     return tokens.map((t, i) => {
       const w = t.lower;
       const nextWord = tokens[i + 1]?.lower;
-      let tag = 'X';
+      let tag: TokenTag = 'X';
       if (!t.word) tag = 'PUNCT';
       else if (DETERMINERS.has(w)) tag = 'DET';
       else if (PRONOUNS.has(w)) tag = 'PRON';
@@ -110,7 +180,7 @@
       else if (COORD.has(w)) tag = 'CCONJ';
       else if (SUBORD.has(w) || RELATIVE.has(w)) tag = 'SCONJ';
       else if (THING_WORDS.has(w)) tag = 'PRON';
-      else if (/s$/.test(w) && (AUX.has(nextWord) || MODALS.has(nextWord))) tag = 'NOUN';
+      else if (/s$/.test(w) && nextWord !== undefined && (AUX.has(nextWord) || MODALS.has(nextWord))) tag = 'NOUN';
       else if (isLexicalVerb(w) || LINKING.has(w)) tag = 'VERB';
       else if (COMMON_ADJECTIVES.has(w)) tag = 'ADJ';
       else if (isLikelyAdverb(w)) tag = 'ADV';
@@ -118,9 +188,9 @@
       else {
         const prev = tokens[i - 1]?.lower;
         const next = tokens[i + 1]?.lower;
-        if (DETERMINERS.has(prev) || POSSESSIVES.has(prev)) tag = 'NOUN';
+        if (prev !== undefined && (DETERMINERS.has(prev) || POSSESSIVES.has(prev))) tag = 'NOUN';
         else if (prev === 'to' && !DETERMINERS.has(w) && !PREPOSITIONS.has(w)) tag = 'VERB';
-        else if ((BE.has(prev) || HAVE.has(prev)) && isLikelyParticiple(w)) tag = 'VERB';
+        else if (prev !== undefined && (BE.has(prev) || HAVE.has(prev)) && isLikelyParticiple(w)) tag = 'VERB';
         else if (isLikelyParticiple(w) && !DETERMINERS.has(prev)) tag = 'VERB';
         else if (/^(?:\w+)(?:ous|ive|able|ible|al|ful|less|ic|ary|ory)$/.test(w)) tag = 'ADJ';
         else if (/^[A-Z]/.test(t.text) && i > 0) tag = 'NOUN';
@@ -131,7 +201,7 @@
     });
   }
 
-  function isFiniteVerbStart(tokens, i) {
+  function isFiniteVerbStart(tokens: Token[], i: number): boolean {
     const t = tokens[i];
     if (!t || !t.word) return false;
     if (t.tag === 'MODAL' || t.tag === 'AUX') return true;
@@ -142,12 +212,12 @@
     if (prev === 'to') return false; // infinitive, not a finite clause head
     if (prevToken?.tag === 'DET' || prevToken?.tag === 'ADJ' || prevToken?.tag === 'NUM') return false;
     if (prevToken?.text === '-' || tokens[i - 2]?.text === '-') return false; // re-render, user-defined, etc.
-    if (t.lower.endsWith('ing') && !BE.has(prev)) return false;
-    if (isLikelyParticiple(t.lower) && !AUX.has(prev) && next?.tag === 'NOUN') return false; // fetched values
+    if (t.lower.endsWith('ing') && (prev === undefined || !BE.has(prev))) return false;
+    if (isLikelyParticiple(t.lower) && (prev === undefined || !AUX.has(prev)) && next?.tag === 'NOUN') return false; // fetched values
     return true;
   }
 
-  function consumeVerbPhrase(tokens, start) {
+  function consumeVerbPhrase(tokens: Token[], start: number): VerbPhrase {
     let i = start;
     let end = start;
     let seenCore = false;
@@ -172,8 +242,8 @@
     return { start, end, seenCore };
   }
 
-  function relativeClauseIntervals(tokens) {
-    const intervals = [];
+  function relativeClauseIntervals(tokens: Token[]): RelativeInterval[] {
+    const intervals: RelativeInterval[] = [];
     for (let i = 1; i < tokens.length - 1; i++) {
       if (!RELATIVE.has(tokens[i].lower)) continue;
       let verb = -1;
@@ -192,16 +262,16 @@
     return intervals;
   }
 
-  function insideInterval(i, intervals) {
+  function insideInterval(i: number, intervals: RelativeInterval[]): boolean {
     return intervals.some(x => i >= x.start && i <= x.end);
   }
 
-  function initialSubordinateComma(tokens) {
+  function initialSubordinateComma(tokens: Token[]): number {
     if (!tokens.length || !SUBORD.has(tokens[0].lower)) return -1;
     return tokens.findIndex(t => t.text === ',');
   }
 
-  function looksLikeNoise(text) {
+  function looksLikeNoise(text: string): boolean {
     const t = text.trim();
     if (!t) return true;
     if (/^(?:https?:\/\/|www\.)\S+$/i.test(t)) return true;
@@ -212,7 +282,7 @@
     return false;
   }
 
-  function shortFragment(tokens) {
+  function shortFragment(tokens: Token[]): boolean {
     const words = tokens.filter(t => t.word);
     if (words.length > 3) {
       // Marketing/UI noun phrase: “Everything you need to …” has no matrix predicate.
@@ -231,7 +301,7 @@
     return false;
   }
 
-  function scoreVerbCandidate(tokens, i, relatives) {
+  function scoreVerbCandidate(tokens: Token[], i: number, relatives: RelativeInterval[]): number {
     if (!isFiniteVerbStart(tokens, i)) return -Infinity;
     let score = 0;
     const w = tokens[i].lower;
@@ -255,7 +325,7 @@
     return score;
   }
 
-  function chooseMainVerb(tokens) {
+  function chooseMainVerb(tokens: Token[]): MainVerb {
     const relatives = relativeClauseIntervals(tokens);
     let best = -1;
     let bestScore = -Infinity;
@@ -273,7 +343,7 @@
     return { index: best, score: bestScore, relatives };
   }
 
-  function trimSubject(tokens, start, end) {
+  function trimSubject(tokens: Token[], start: number, end: number): IndexRange {
     // Strip an initial subordinate/adverbial phrase ending with a comma.
     const commas = tokens.map((t, idx) => (idx >= start && idx <= end && t.text === ',') ? idx : -1).filter(idx => idx >= 0);
     const comma = (SUBORD.has(tokens[start]?.lower) && commas.length) ? commas[commas.length - 1] : (commas[0] ?? -1);
@@ -283,7 +353,7 @@
     return { start, end };
   }
 
-  function findTail(tokens, start) {
+  function findTail(tokens: Token[], start: number): IndexRange | null {
     while (start < tokens.length && (['not','never','also','just','only'].includes(tokens[start].lower) || tokens[start].text === ',')) start++;
     if (start >= tokens.length) return null;
 
@@ -316,7 +386,7 @@
     return tail;
   }
 
-  function classifyTail(tokens, verbStart, verbEnd, tail) {
+  function classifyTail(tokens: Token[], verbStart: number, verbEnd: number, tail: IndexRange | null): Role | null {
     if (!tail) return null;
     const firstVerb = tokens[verbStart].lower;
     const vpWords = tokens.slice(verbStart, verbEnd + 1).filter(t => t.word).map(t => t.lower);
@@ -324,15 +394,15 @@
     const lastVerb = vpWords[vpWords.length - 1];
 
     if (LINKING.has(firstVerb)) return 'c';
-    if (hasBe && lastVerb && COMMON_ADJECTIVES.has(tokens[tail.start]?.lower)) return 'c';
+    if (hasBe && lastVerb && COMMON_ADJECTIVES.has(tokens[tail.start].lower)) return 'c';
     // "is called X", "is considered X" -> complement after passive predicate
     if (hasBe && ['called','named','considered','defined','known','set'].includes(lastVerb)) return 'c';
     return 'o';
   }
 
-  function confidenceFor(tokens, main, subject, vp, tail) {
+  function confidenceFor(tokens: Token[], main: MainVerb, subject: IndexRange, vp: VerbPhrase, tail: IndexRange | null): { value: number; reasons: string[] } {
     let c = 0.58;
-    const reasons = [];
+    const reasons: string[] = [];
     if (main.score >= 3) { c += 0.12; reasons.push('strong-verb'); }
     if (main.relatives.length) { c += 0.05; reasons.push('relative-clause-filter'); }
     if (subject && subject.end >= subject.start) { c += 0.08; reasons.push('subject-found'); }
@@ -344,7 +414,7 @@
     return { value: Math.max(0.1, Math.min(0.98, c)), reasons };
   }
 
-  function rangeFromTokens(tokens, start, end, role, offset) {
+  function rangeFromTokens(tokens: Token[], start: number, end: number, role: Role, offset: number): ParserRange {
     return {
       role,
       start: tokens[start].start + offset,
@@ -352,14 +422,14 @@
     };
   }
 
-  function languageProfile(text) {
+  function languageProfile(text: string): { latin: number; japanese: number; letters: number; latinRatio: number } {
     const latin = (text.match(/[A-Za-z]/g) || []).length;
     const japanese = (text.match(/[\u3040-\u30ff\u3400-\u9fff]/g) || []).length;
     const letters = latin + japanese;
     return { latin, japanese, letters, latinRatio: letters ? latin / letters : 0 };
   }
 
-  function isEnglishSentence(text) {
+  function isEnglishSentence(text: string): boolean {
     const p = languageProfile(text);
     // This extension intentionally targets English. A few non-Latin punctuation
     // characters are harmless, but real Japanese/CJK prose should never be fed
@@ -369,7 +439,7 @@
     return p.latin >= 5;
   }
 
-  function conditionalMainStart(tokens) {
+  function conditionalMainStart(tokens: Token[]): number {
     if (!tokens.length || !['if', 'when', 'unless', 'although', 'while'].includes(tokens[0].lower)) return -1;
     const comma = tokens.findIndex(t => t.text === ',');
     if (comma < 0 || comma >= tokens.length - 1) return -1;
@@ -380,7 +450,7 @@
     return -1;
   }
 
-  function omittedSubjectApiVerb(tokens) {
+  function omittedSubjectApiVerb(tokens: Token[]): number {
     const first = tokens.findIndex(t => t.word);
     if (first < 0) return -1;
     const w = tokens[first].lower;
@@ -392,7 +462,7 @@
     return -1;
   }
 
-  function analyzeSentence(text, offset = 0) {
+  function analyzeSentence(text: string, offset = 0): SentenceResult {
     if (!isEnglishSentence(text)) return { ranges: [], confidence: 0, reasons: ['non-english'], ruleId: 'skip.non-english' };
     if (looksLikeNoise(text)) return { ranges: [], confidence: 0, reasons: ['noise-text'], ruleId: 'skip.noise' };
 
@@ -543,16 +613,16 @@
   }
 
 
-  function modifierRanges(tokens, coreRanges, offset = 0) {
+  function modifierRanges(tokens: Token[], coreRanges: ParserRange[], offset = 0): ParserRange[] {
     if (!tokens?.length) return [];
     const occupied = tokens.map(t => coreRanges.some(r => {
       const start = t.start + offset;
       const end = t.end + offset;
       return start < r.end && end > r.start;
     }));
-    const out = [];
+    const out: ParserRange[] = [];
     let i = 0;
-    const boundary = t => !t || ['.', '!', '?', ';', ':'].includes(t.text) || t.tag === 'CCONJ';
+    const boundary = (t: Token | undefined) => !t || ['.', '!', '?', ';', ':'].includes(t.text) || t.tag === 'CCONJ';
     while (i < tokens.length) {
       while (i < tokens.length && (occupied[i] || boundary(tokens[i]) || tokens[i].text === ',')) i++;
       if (i >= tokens.length) break;
@@ -577,12 +647,12 @@
     return out;
   }
 
-  function analyze(text) {
+  function analyze(text: string): AnalysisResult {
     const started = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    const sentences = [];
-    const ranges = [];
+    const sentences: AnalyzedSentence[] = [];
+    const ranges: ParserRange[] = [];
     const coarseRanges = sentenceRanges(text);
-    const parseRanges = [];
+    const parseRanges: IndexRange[] = [];
     for (const r of coarseRanges) {
       const segment = text.slice(r.start, r.end);
       let last = 0;
@@ -620,5 +690,4 @@
     return { version: VERSION, ranges, sentences, durationMs: Math.max(0, ended - started) };
   }
 
-  return { VERSION, tokenize, tagTokens, isEnglishSentence, analyzeSentence, analyze };
-});
+export { tokenize, tagTokens, isEnglishSentence, analyzeSentence, analyze };

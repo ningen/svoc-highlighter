@@ -2,15 +2,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { constants as fsConstants } from 'node:fs';
-import { createRequire } from 'node:module';
 import { promisify } from 'node:util';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { collectSuspicious, extractPayload, renderMarkdown, summarize } from './lib/benchmark-lib.mjs';
+import * as parser from '../src/parser.ts';
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const harnessPath = path.join(root, 'benchmark/harness.html');
-const parser = createRequire(import.meta.url)(path.join(root, 'parser.js'));
+const harnessPath = path.join(root, 'benchmark/.vite/benchmark/harness.html');
 
 function parseArgs(argv) {
   const options = {

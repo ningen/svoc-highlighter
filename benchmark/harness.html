@@ -3,52 +3,8 @@
 <head>
   <meta charset="utf-8">
   <title>SVOC benchmark harness</title>
-  <script src="../dom-extractor.js"></script>
-  <script src="../parser.js"></script>
 </head>
 <body>
-<script>
-(() => {
-  'use strict';
-
-  function publish(payload) {
-    const pre = document.createElement('pre');
-    pre.id = 'svoc-extract-result';
-    pre.textContent = JSON.stringify(payload);
-    document.body.append(pre);
-  }
-
-  function englishLike(text) {
-    const trimmed = text.trim();
-    if (trimmed.length < 8) return false;
-    if (/^(?:https?:\/\/|www\.)\S+$/i.test(trimmed)) return false;
-    const letters = (text.match(/[A-Za-z]/g) || []).length;
-    return letters >= 5 && letters / Math.max(text.length, 1) > 0.32 && SVOCParser.isEnglishSentence(text);
-  }
-
-  try {
-    const params = new URL(location.href).searchParams;
-    const file = params.get('file');
-    const host = params.get('host') || '';
-    if (!file) throw new Error('Missing file query parameter');
-
-    const started = performance.now();
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', file.startsWith('file:') ? file : `file://${file}`, false);
-    xhr.send();
-    if (xhr.status !== 0 && xhr.status !== 200) throw new Error(`Cannot read benchmark file: status ${xhr.status}`);
-
-    const doc = new DOMParser().parseFromString(xhr.responseText, 'text/html');
-    const root = doc.body || doc.documentElement;
-    const blocks = SVOCDom.collectCandidateBlocks(root, host)
-      .map(block => ({ tag: block.tagName, text: SVOCDom.collectText(block, doc).text }))
-      .filter(block => englishLike(block.text));
-
-    publish({ blocks, extractionMs: Math.max(0, performance.now() - started) });
-  } catch (error) {
-    publish({ error: error instanceof Error ? error.message : String(error) });
-  }
-})();
-</script>
+  <script type="module" src="/src/benchmark-harness.ts"></script>
 </body>
 </html>
