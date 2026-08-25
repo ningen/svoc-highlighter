@@ -1,0 +1,111 @@
+[
+  {
+    "text": "https://dashboard.stripe.com/connect/accounts/acct_1OGsjqHBAuvrPxDf",
+    "skip": true
+  },
+  {
+    "text": "Getting Started",
+    "skip": true
+  },
+  {
+    "text": "Merge requests",
+    "skip": true
+  },
+  {
+    "text": "Everything you need to build great products on the web.",
+    "skip": true
+  },
+  {
+    "text": "Pages Router: The original router, still supported and being improved.",
+    "skip": true
+  },
+  {
+    "text": "If you need to use Webpack instead of Turbopack, you can opt-in with the flag:",
+    "s": "you",
+    "v": "can opt-in"
+  },
+  {
+    "text": "App Router: Uses React canary releases built-in, which include all the stable React 19 changes.",
+    "s": "App Router",
+    "v": "Uses",
+    "o": "React canary releases built-in"
+  },
+  {
+    "text": "Lazy Bundling: Turbopack only bundles what is actually requested by the dev server.",
+    "s": "Turbopack",
+    "v": "bundles",
+    "o": "what is actually requested"
+  },
+  {
+    "text": "Automatically processes PostCSS config files in a Node.js worker pool.",
+    "v": "processes",
+    "o": "PostCSS config files"
+  },
+  {
+    "text": "Not yet supported by default.",
+    "v": "supported"
+  },
+  {
+    "text": "Starting in Next.js 16, Turbopack uses Babel automatically if it detects a configuration file.",
+    "s": "Turbopack",
+    "v": "uses",
+    "o": "Babel automatically"
+  },
+  {
+    "text": "This lazy approach can reduce initial compile times and memory usage.",
+    "s": "This lazy approach",
+    "v": "can reduce",
+    "o": "initial compile times and memory usage"
+  },
+  {
+    "text": "Turbopack will instruct you to create it manually.",
+    "s": "Turbopack",
+    "v": "will instruct",
+    "o": "you to create it manually"
+  },
+  {
+    "text": "Basic transforms work; advanced AMD usage is limited.",
+    "multi": [
+      {
+        "s": "Basic transforms",
+        "v": "work"
+      },
+      {
+        "s": "advanced AMD usage",
+        "v": "is limited"
+      }
+    ]
+  },
+  {
+    "text": "If you want to require approval for all upgrades, set dependencyDashboardApproval to true:",
+    "v": "set",
+    "o": "dependencyDashboardApproval"
+  },
+  {
+    "text": "Returns true if a given string is a substring.",
+    "v": "Returns",
+    "o": "true"
+  },
+  {
+    "text": "Creates a package rule for matching dependencies.",
+    "v": "Creates",
+    "o": "a package rule"
+  },
+  {
+    "text": "Checks whether the dependency is enabled.",
+    "v": "Checks"
+  },
+  {
+    "text": "よく使われる動詞の種類（make, call, findなど）の解説",
+    "skip": true
+  },
+  {
+    "text": "Dependabot Alertsを有効にすると、RenovateはPRを作成しません。",
+    "skip": true
+  },
+  {
+    "text": "When cache is enabled, clear the cache manually.",
+    "v": "clear",
+    "o": "the cache manually"
+  }
+]

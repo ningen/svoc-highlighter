@@ -1,0 +1,4 @@
+const checkbox=document.querySelector('#enabled');const confidence=document.querySelector('#confidence');const processed=document.querySelector('#processed');
+chrome.storage.local.get({enabled:true,svocStats:{}},({enabled,svocStats})=>{checkbox.checked=enabled;const avg=svocStats.processed?svocStats.totalConfidence/svocStats.processed:0;confidence.textContent=avg?`${Math.round(avg*100)}%`:'—';processed.textContent=`${svocStats.processed||0} sentences processed`;});
+checkbox.addEventListener('change',async()=>{const enabled=checkbox.checked;await chrome.storage.local.set({enabled});const[tab]=await chrome.tabs.query({active:true,currentWindow:true});if(tab?.id)chrome.tabs.sendMessage(tab.id,{type:'SVOC_SET_ENABLED',enabled}).catch(()=>{});});
+document.querySelector('#diagnostics').addEventListener('click',()=>chrome.runtime.openOptionsPage());

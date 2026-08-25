@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "SVOC Highlighter",
+  "version": "0.8.0",
+  "description": "Highlights English S/V/O/C/M locally with lightweight parsing, site exclusion controls, gold-corpus regression monitoring, analyzed-host controls, and no AI or network requests.",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "action": {
+    "default_title": "SVOC Highlighter",
+    "default_popup": "popup.html"
+  },
+  "options_page": "diagnostics.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "privacy.js",
+        "parser.js",
+        "dom-extractor.js",
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

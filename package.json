@@ -1,0 +1,10 @@
+{
+  "name": "svoc-highlighter",
+  "version": "0.8.0",
+  "private": true,
+  "scripts": {
+    "test": "node tests/run-tests.js && node tests/repository-policy.test.js",
+    "test:browser": "bash tests/run-dom-tests.sh",
+    "benchmark:fetch": "node tools/fetch-benchmark.mjs"
+  }
+}

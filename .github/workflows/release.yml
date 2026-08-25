@@ -1,0 +1,25 @@
+name: Release Chrome extension
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test parser and repository policy
+        run: npm test
+      - name: Test DOM extraction in Chrome
+        run: npm run test:browser
+      - name: Build extension zip
+        run: |
+          zip -r svoc-highlighter-${GITHUB_REF_NAME}.zip \
+            manifest.json privacy.js parser.js dom-extractor.js content.js styles.css \
+            popup.html popup.js diagnostics.html diagnostics.js LICENSE
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: svoc-highlighter-${{ github.ref_name }}.zip
+          generate_release_notes: true

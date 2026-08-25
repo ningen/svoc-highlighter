@@ -1,0 +1,6 @@
+node_modules/
+benchmark/cache/*
+!benchmark/cache/.gitkeep
+benchmark/output/
+*.log
+.DS_Store

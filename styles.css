@@ -1,0 +1,7 @@
+.svoc-s,.svoc-v,.svoc-o,.svoc-c,.svoc-m{border-radius:.18em;padding:0 .04em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.svoc-s{text-decoration:underline 2px rgba(52,152,219,.82);text-underline-offset:.16em}
+.svoc-v{text-decoration:underline 2px rgba(231,76,60,.82);text-underline-offset:.16em}
+.svoc-o{text-decoration:underline 2px rgba(46,204,113,.82);text-underline-offset:.16em}
+.svoc-c{text-decoration:underline 2px rgba(241,196,15,.95);text-underline-offset:.16em}
+
+.svoc-m{text-decoration:underline 1.5px dotted rgba(108,117,125,.72);text-underline-offset:.18em}

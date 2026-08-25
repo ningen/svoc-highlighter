@@ -1,0 +1,159 @@
+[
+  {
+    "text": "If you want to require approval for all upgrades, set dependencyDashboardApproval to true:",
+    "analysis": "conditional imperative",
+    "v": "set",
+    "o": "dependencyDashboardApproval",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "Returns true if a given string is a substring.",
+    "analysis": "API-doc omitted subject",
+    "v": "Returns",
+    "o": "true",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "If you are using a project access token, or a group access token, GitLab creates an internalbot user for you.",
+    "s": "GitLab",
+    "v": "creates",
+    "o": "an internalbot user",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "This bot user is the one that will be used to create merge requests and issues.",
+    "s": "This bot user",
+    "v": "is",
+    "c": "the one that will be used to create merge requests and issues",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "Turbopack requires platform-specific native bindings.",
+    "s": "Turbopack",
+    "v": "requires",
+    "o": "platform-specific native bindings",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "The following platforms are currently supported:",
+    "s": "The following platforms",
+    "v": "are currently supported",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "This lazy approach can reduce initial compile times and memory usage.",
+    "s": "This lazy approach",
+    "v": "can reduce",
+    "o": "initial compile times and memory usage",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "Renovate does not currently have the ability to determine the value from your package manager's configuration.",
+    "s": "Renovate",
+    "v": "does not currently have",
+    "o": "the ability to determine the value",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "The following configuration options can be used to enable and tune the functionality of Minimum Release Age:",
+    "s": "The following configuration options",
+    "v": "can be used",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "This option supports Renovate's template syntax",
+    "s": "This option",
+    "v": "supports",
+    "o": "Renovate's template syntax",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "Add to this object if you wish to define rules that apply only to patch updates.",
+    "analysis": "imperative",
+    "v": "Add",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "In the example above, a package name like foo will be transformed to bar.",
+    "s": "a package name like foo",
+    "v": "will be transformed",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "You can customise this configuration object, e.g. to add custom rules too.",
+    "s": "You",
+    "v": "can customise",
+    "o": "this configuration object",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "I found the book interesting.",
+    "s": "I",
+    "v": "found",
+    "o": "the book interesting",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "It seems like we encountered an error.",
+    "s": "It",
+    "v": "seems",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "Measurement and communication of how many vulnerabilities are aligned to SLAs.",
+    "s": "Measurement and communication of how many vulnerabilities",
+    "v": "are aligned",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "At least quarterly.",
+    "skip": true,
+    "analysis": "fragment",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "Integration with Mend Renovate",
+    "skip": true,
+    "analysis": "heading/fragment",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "よく使われる動詞の種類（make, call, findなど）の解説",
+    "skip": true,
+    "analysis": "non-English",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "Renovate から見るとこの image のレジストリホストは ECR であり、Docker Hub ではないため、機能しません。",
+    "skip": true,
+    "analysis": "non-English",
+    "source": "current-svoc.json"
+  },
+  {
+    "text": "In the App Router, Turbopack supports modern JavaScript features.",
+    "s": "Turbopack",
+    "v": "supports",
+    "o": "modern JavaScript features",
+    "m": "In the App Router",
+    "analysis": "fronted prepositional modifier",
+    "source": "v0.7 M corpus"
+  },
+  {
+    "text": "Turbopack supports modern JavaScript features in development.",
+    "s": "Turbopack",
+    "v": "supports",
+    "o": "modern JavaScript features",
+    "m": "in development",
+    "analysis": "trailing prepositional modifier",
+    "source": "v0.7 M corpus"
+  },
+  {
+    "text": "If the option is enabled, Renovate creates the issue.",
+    "s": "Renovate",
+    "v": "creates",
+    "o": "the issue",
+    "m": "If the option is enabled",
+    "analysis": "conditional clause modifier",
+    "source": "v0.7 M corpus"
+  }
+]
