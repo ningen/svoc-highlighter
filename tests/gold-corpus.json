@@ -221,5 +221,12 @@
     "c": "rate limited",
     "analysis": "plural subject before auxiliary",
     "source": "benchmark-class-fixes"
+  },
+  {
+    "text": "Overview: Before sunrise, within the test cluster.",
+    "skip": true,
+    "fullAnalysis": true,
+    "analysis": "skipped fragments must not receive standalone modifier ranges",
+    "source": "benchmark-class-fixes"
   }
 ]

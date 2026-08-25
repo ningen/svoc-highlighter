@@ -598,7 +598,9 @@
       const sentenceText = text.slice(r.start, r.end);
       if ((sentenceText.match(/[A-Za-z]/g) || []).length < 5) continue;
       const result = analyzeSentence(sentenceText, r.start);
-      const modifier = result.tokens ? modifierRanges(result.tokens, result.ranges, r.start) : [];
+      // Modifiers only supplement an identified clause. A skipped fragment has
+      // no core SVOC range and must remain unhighlighted.
+      const modifier = result.tokens && result.ranges.length ? modifierRanges(result.tokens, result.ranges, r.start) : [];
       result.ranges = [...result.ranges, ...modifier];
       ranges.push(...result.ranges);
       const leading = sentenceText.length - sentenceText.trimStart().length;

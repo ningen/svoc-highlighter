@@ -1,4 +1,4 @@
-const fs=require('fs');const path=require('path');
+const fs=require('fs');const path=require('path');const os=require('os');const {spawnSync}=require('child_process');
 let checks=0,pass=0;const failures=[];
 function check(name,value){checks++;if(value)pass++;else failures.push(name);}
 const root=path.resolve(__dirname,'..');
@@ -15,5 +15,14 @@ check('release does not run benchmark evaluator',!workflow.includes('benchmark:r
 const runner=fs.readFileSync(path.join(root,'tools/run-benchmark.mjs'),'utf8');
 const forbidden=[/\bfetch\s*\(/,/node:http/,/node:https/,/https:\/\//];
 check('benchmark evaluator has no network API',forbidden.every(pattern=>!pattern.test(runner)));
+const fetcher=fs.readFileSync(path.join(root,'tools/fetch-benchmark.mjs'),'utf8');
+check('fetcher caps each host at 20 pages',/MAX_PAGES_PER_HOST=20/.test(fetcher));
+check('fetcher caps each run at 200 pages',/MAX_PAGES=200/.test(fetcher));
+const tempDir=fs.mkdtempSync(path.join(os.tmpdir(),'svoc-benchmark-policy-'));
+const overHost=Array.from({length:21},(_,index)=>({url:`https://docs.example.test/page-${index}`,license:'synthetic',termsReviewed:true}));
+const overHostFile=path.join(tempDir,'sources.json');fs.writeFileSync(overHostFile,JSON.stringify(overHost));
+const overHostRun=spawnSync(process.execPath,[path.join(root,'tools/fetch-benchmark.mjs'),'--sources',overHostFile],{cwd:root,encoding:'utf8'});
+check('fetcher rejects a 21-page host before network access',overHostRun.status!==0&&overHostRun.stderr.includes('more than 20 pages'));
+fs.rmSync(tempDir,{recursive:true,force:true});
 console.log(`Benchmark policy: ${pass}/${checks} checks passed`);
 if(failures.length){for(const failure of failures)console.error(`FAIL ${failure}`);process.exitCode=1;}

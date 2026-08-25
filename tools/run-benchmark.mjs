@@ -16,7 +16,7 @@ function parseArgs(argv) {
   const options = {
     cache: path.join(root, 'benchmark/cache'),
     out: path.join(root, 'benchmark/output'),
-    limit: 100,
+    limit: 200,
     browser: process.env.CHROME_BIN || ''
   };
   for (let i = 0; i < argv.length; i++) {

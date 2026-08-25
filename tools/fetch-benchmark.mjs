@@ -5,7 +5,8 @@ import crypto from 'node:crypto';
 const USER_AGENT='SVOC-Highlighter-Benchmark/0.9 (+https://github.com/ningen/svoc-highlighter)';
 const PRODUCT='svoc-highlighter-benchmark';
 const MIN_DELAY_MS=2000;
-const MAX_PAGES=20;
+const MAX_PAGES=200;
+const MAX_PAGES_PER_HOST=20;
 function parseArgs(argv){
   let sourceFile=path.resolve('benchmark/sources.json'),refresh=false;
   for(let i=0;i<argv.length;i++){
@@ -23,6 +24,15 @@ const cacheDir=path.resolve('benchmark/cache');
 const sources=JSON.parse(await fs.readFile(sourceFile,'utf8'));
 if(!Array.isArray(sources)) throw new Error(`${sourceFile} must contain an array`);
 if(sources.length>MAX_PAGES) throw new Error(`Refusing to fetch more than ${MAX_PAGES} pages per run`);
+const hostCounts=new Map();
+for(const source of sources){
+  if(!source?.url||source.termsReviewed!==true||!source.license) throw new Error('Every source needs url, license, and termsReviewed:true');
+  const u=new URL(source.url);
+  if(!['http:','https:'].includes(u.protocol)) throw new Error(`Unsupported protocol: ${u.protocol}`);
+  if(u.username||u.password) throw new Error('Credentialed URLs are forbidden');
+  const count=(hostCounts.get(u.hostname)||0)+1;hostCounts.set(u.hostname,count);
+  if(count>MAX_PAGES_PER_HOST) throw new Error(`Refusing to fetch more than ${MAX_PAGES_PER_HOST} pages from ${u.hostname}`);
+}
 await fs.mkdir(cacheDir,{recursive:true});
 let lastRequest=0; const robotsCache=new Map();
 async function politeFetch(url,accept='text/plain,*/*'){
@@ -74,10 +84,7 @@ async function allowed(url){
   return robotsAllows(text,url);
 }
 for(const source of sources){
-  if(!source?.url||source.termsReviewed!==true||!source.license) throw new Error('Every source needs url, license, and termsReviewed:true');
   const u=new URL(source.url);
-  if(!['http:','https:'].includes(u.protocol)) throw new Error(`Unsupported protocol: ${u.protocol}`);
-  if(u.username||u.password) throw new Error('Credentialed URLs are forbidden');
   const id=crypto.createHash('sha256').update(source.url).digest('hex').slice(0,16);
   const htmlFile=path.join(cacheDir,`${id}.html`),metadataFile=path.join(cacheDir,`${id}.json`);
   if(!refresh){

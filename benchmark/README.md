@@ -9,6 +9,7 @@ External HTML is **never committed**. This directory is for opt-in, local-only b
 - The fetcher checks `robots.txt` before every page family and refuses disallowed URLs.
 - Requests use an identifying User-Agent and a minimum delay between requests.
 - Downloads are capped per run.
+- A run accepts at most 200 pages and at most 20 pages from any one hostname.
 - Raw HTML is written only under `benchmark/cache/`, which is gitignored.
 - GitHub Actions does not execute the external fetcher.
 - Do not add authenticated, personalized, private, paywalled, or user-specific URLs.
@@ -54,7 +55,7 @@ The evaluator uses only local files and headless Chromium. It does not call netw
 ```text
 --cache <dir>    HTML and metadata cache (default: benchmark/cache)
 --out <dir>      report directory (default: benchmark/output)
---limit <count>  maximum cached pages to process (default: 100)
+--limit <count>  maximum cached pages to process (default: 200)
 --browser <path> Chromium or Chrome executable
 ```
 
