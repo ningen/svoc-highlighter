@@ -155,5 +155,71 @@
     "m": "If the option is enabled",
     "analysis": "conditional clause modifier",
     "source": "v0.7 M corpus"
+  },
+  {
+    "text": "Do not use this option in production.",
+    "v": "Do not use",
+    "o": "this option",
+    "analysis": "negative imperative with do support",
+    "source": "benchmark-class-fixes"
+  },
+  {
+    "text": "Don't modify files that are generated automatically.",
+    "v": "Don't modify",
+    "o": "files that are generated automatically",
+    "analysis": "negative contracted imperative",
+    "source": "benchmark-class-fixes"
+  },
+  {
+    "text": "The cleanup task runs hourly.",
+    "s": "The cleanup task",
+    "v": "runs",
+    "m": "hourly",
+    "analysis": "adverb-only tail",
+    "source": "benchmark-class-fixes"
+  },
+  {
+    "text": "Never share secret tokens in public logs.",
+    "v": "share",
+    "o": "secret tokens",
+    "analysis": "documentation verb share",
+    "source": "benchmark-class-fixes"
+  },
+  {
+    "text": "Note that the option is deprecated.",
+    "v": "Note",
+    "o": "that the option is deprecated",
+    "analysis": "documentation verb note",
+    "source": "benchmark-class-fixes"
+  },
+  {
+    "text": "The command exits with status one when the task fails.",
+    "s": "The command",
+    "v": "exits",
+    "analysis": "documentation verb exit",
+    "source": "benchmark-class-fixes"
+  },
+  {
+    "text": "Click the retry button to continue.",
+    "v": "Click",
+    "o": "the retry button to continue",
+    "analysis": "documentation verbs click and retry",
+    "source": "benchmark-class-fixes"
+  },
+  {
+    "text": "The client retries the request after a delay.",
+    "s": "The client",
+    "v": "retries",
+    "o": "the request",
+    "analysis": "inflected documentation verb retry",
+    "source": "benchmark-class-fixes"
+  },
+  {
+    "text": "Requests are rate limited to 60 per minute per user.",
+    "s": "Requests",
+    "v": "are",
+    "c": "rate limited",
+    "analysis": "plural subject before auxiliary",
+    "source": "benchmark-class-fixes"
   }
 ]

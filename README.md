@@ -1,5 +1,13 @@
 # SVOC Highlighter
 
+## v0.9.0
+
+- Added a local headless-Chromium benchmark that runs gitignored cached pages through the production DOM extractor and parser.
+- Added JSON and Markdown reports for coverage, rule usage, confidence, timing, and suspicious range patterns.
+- Added an example source list that stays disabled until each entry's terms and license are reviewed.
+- Fixed negative imperatives, contracted auxiliaries, adverb-only tails, common documentation verbs, and plural subjects before auxiliaries.
+- Kept external fetching opt-in and excluded from CI and release builds.
+
 ## v0.8.0
 
 - Separated DOM extraction into `dom-extractor.js` so DOM behavior can be tested independently from the parser and renderer.
@@ -74,7 +82,7 @@ When the list is saved, existing samples and analyzed-host counters from newly e
 
 ## Install
 
-1. Download and extract `svoc-highlighter-v0.8.0.zip`.
+1. Download and extract `svoc-highlighter-v0.9.0.zip`.
 2. Open `chrome://extensions`.
 3. Enable **Developer mode**.
 4. Choose **Load unpacked**.
@@ -86,6 +94,8 @@ When the list is saved, existing samples and analyzed-host counters from newly e
 npm test
 npm run test:browser   # requires Chromium/Chrome
 ```
+
+See [`benchmark/README.md`](benchmark/README.md) for the opt-in local benchmark workflow. Raw external HTML and generated reports remain outside Git.
 
 ## Performance
 

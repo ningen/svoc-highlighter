@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SVOC Highlighter",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Highlights English S/V/O/C/M locally with lightweight parsing, site exclusion controls, gold-corpus regression monitoring, analyzed-host controls, and no AI or network requests.",
   "permissions": [
     "storage",
